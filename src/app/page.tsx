@@ -1,65 +1,232 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useEffect } from 'react';
+
+interface HistoryItem {
+  id: number;
+  type: 'suku' | 'jumlah';
+  a: number;
+  b: number;
+  n: number;
+  result: number;
+  formula: string;
+  label: string;
+}
+
+// Fungsi untuk membaca dari localStorage
+const loadHistoryFromLocalStorage = (): HistoryItem[] => {
+  if (typeof window !== 'undefined') {
+    const savedHistory = localStorage.getItem('arithmeticHistory');
+    if (savedHistory) {
+      try {
+        return JSON.parse(savedHistory);
+      } catch (e) {
+        console.error("Error loading history from localStorage", e);
+        return [];
+      }
+    }
+  }
+  return [];
+};
+
+const Kalkulator_aritmatika_deret_baris = () => {
+  const [a, setA] = useState<string>('');
+  const [b, setB] = useState<string>('');
+  const [n, setN] = useState<string>('');
+  const [result, setResult] = useState<number | null>(null);
+  const [formulaUsed, setFormulaUsed] = useState<string>('');
+  const [label, setLabel] = useState<string>('');
+  // Inisialisasi state history langsung dari localStorage
+  const [history, setHistory] = useState<HistoryItem[]>(loadHistoryFromLocalStorage);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [showHistory, setShowHistory] = useState<boolean>(false);
+
+  // Simpan history ke localStorage setiap kali history berubah
+  useEffect(() => {
+    localStorage.setItem('arithmeticHistory', JSON.stringify(history));
+  }, [history]);
+
+  const handleHitungSuku = () => {
+    if (!a || !b || !n) {
+      alert("Mohon isi semua nilai: Suku Awal (a), Beda (b), dan Suku ke-n (n)");
+      return;
+    }
+    const aNum = parseFloat(a);
+    const bNum = parseFloat(b);
+    const nNum = parseInt(n, 10);
+
+    if (isNaN(aNum) || isNaN(bNum) || isNaN(nNum) || nNum <= 0) {
+      alert("Pastikan semua input valid (angka)");
+      return;
+    }
+
+    const Un = aNum + (nNum - 1) * bNum;
+    setResult(Un);
+    setFormulaUsed(`U(n) = a + (n - 1) * b`);
+    setLabel(`Suku ke-${nNum} (Un)`);
+    const newHistory: HistoryItem = {
+      id: Date.now(),
+      type: 'suku',
+      a: aNum,
+      b: bNum,
+      n: nNum,
+      result: Un,
+      formula: `U(${nNum}) = ${aNum} + (${nNum} - 1) * ${bNum}`,
+      label: `Suku ke-${nNum}`
+    };
+    setHistory(prev => [newHistory, ...prev]);
+    setShowModal(true);
+  };
+
+  const handleHitungJumlah = () => {
+    if (!a || !b || !n) {
+      alert("Mohon isi semua nilai: Suku Awal (a), Beda (b), dan Jumlah Suku (n)");
+      return;
+    }
+    const aNum = parseFloat(a);
+    const bNum = parseFloat(b);
+    const nNum = parseInt(n, 10);
+
+    if (isNaN(aNum) || isNaN(bNum) || isNaN(nNum) || nNum <= 0) {
+      alert("Pastikan semua input valid (angka)");
+      return;
+    }
+
+    const Sn = (nNum / 2) * (2 * aNum + (nNum - 1) * bNum);
+    setResult(Sn);
+    setFormulaUsed(`S(n) = n/2 * (2a + (n - 1)b)`);
+    setLabel(`Jumlah ${nNum} Suku Pertama (Sn)`);
+    const newHistory: HistoryItem = {
+      id: Date.now(),
+      type: 'jumlah',
+      a: aNum,
+      b: bNum,
+      n: nNum,
+      result: Sn,
+      formula: `S(${nNum}) = ${nNum}/2 * (2*${aNum} + (${nNum} - 1)*${bNum})`,
+      label: `Jumlah ${nNum} Suku`
+    };
+    setHistory(prev => [newHistory, ...prev]);
+    setShowModal(true);
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem('arithmeticHistory');
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+          <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">Kalkulator Deret Aritmatika</h1>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Suku Awal (a)</label>
+              <input
+                type="number"
+                value={a}
+                onChange={(e) => setA(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Contoh: 2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Beda (b)</label>
+              <input
+                type="number"
+                value={b}
+                onChange={(e) => setB(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Contoh: 3"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Suku ke-n / Jumlah Suku (n)</label>
+              <input
+                type="number"
+                value={n}
+                onChange={(e) => setN(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Contoh: 5"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-4 justify-center mb-8">
+            <button
+              onClick={handleHitungSuku}
+              className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition duration-200 shadow-md"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              Hitung Suku Ke-n
+            </button>
+            <button
+              onClick={handleHitungJumlah}
+              className="px-6 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition duration-200 shadow-md"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              Hitung Jumlah n Suku
+            </button>
+          </div>
+
+          <div className="text-center mt-6">
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200"
+            >
+              {showHistory ? "Sembunyikan" : "Lihat"} Riwayat
+            </button>
+            {showHistory && history.length > 0 && (
+              <button
+                onClick={clearHistory}
+                className="ml-4 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition duration-200"
+              >
+                Hapus Riwayat
+              </button>
+            )}
+          </div>
+
+          {showHistory && (
+            <div className="mt-6 bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto">
+              <h3 className="font-semibold text-gray-800 mb-2">Riwayat Perhitungan</h3>
+              {history.length === 0 ? (
+                <p className="text-gray-500 text-center">Belum ada riwayat</p>
+              ) : (
+                <ul className="space-y-2">
+                  {history.map((item) => (
+                    <li key={item.id} className="text-sm bg-white p-3 rounded border border-gray-200">
+                      <div className="font-medium">{item.label}</div>
+                      <div className="text-gray-600">{item.formula} = {item.result.toFixed(2)}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      {/* Modal */}
+      {showModal && result !== null && (
+        <div className="fixed inset-0 bg-transparent flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Hasil Perhitungan</h2>
+            <p className="text-gray-700 mb-2"><span className="font-medium">Rumus:</span> {formulaUsed}</p>
+            <p className="text-gray-700 mb-2"><span className="font-medium">Perhitungan:</span> {label}</p>
+            <p className="text-2xl font-bold text-indigo-600 mb-6">{result.toFixed(2)}</p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
         </div>
-      </main>
+      )}
     </div>
   );
-}
+};
+
+export default Kalkulator_aritmatika_deret_baris;
