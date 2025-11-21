@@ -92,9 +92,11 @@ const Kalkulator_aritmatika_deret_baris = () => {
       return;
     }
 
-    const Sn = (nNum / 2) * (2 * aNum + (nNum - 1) * bNum);
+    // Menggunakan rumus Sn = 1/2 * n * [2a + (n-1)b]
+    const Sn = (1 / 2) * nNum * (2 * aNum + (nNum - 1) * bNum);
     setResult(Sn);
-    setFormulaUsed(`S(n) = n/2 * (2a + (n - 1)b)`);
+    // Menampilkan kedua bentuk rumus di modal
+    setFormulaUsed(`S(n) = 1/2 * n * [2a + (n-1)b] atau S(n) = 1/2 * n * (a + U(n))`);
     setLabel(`Jumlah ${nNum} Suku Pertama (Sn)`);
     const newHistory: HistoryItem = {
       id: Date.now(),
@@ -103,7 +105,8 @@ const Kalkulator_aritmatika_deret_baris = () => {
       b: bNum,
       n: nNum,
       result: Sn,
-      formula: `S(${nNum}) = ${nNum}/2 * (2*${aNum} + (${nNum} - 1)*${bNum})`,
+      // Format rumus sesuai gambar: Sn = 1/2 * n * [2a + (n-1)b]
+      formula: `S(${nNum}) = 1/2 * ${nNum} * [2*${aNum} + (${nNum}-1)*${bNum}]`,
       label: `Jumlah ${nNum} Suku`
     };
     setHistory(prev => [newHistory, ...prev]);
@@ -162,13 +165,13 @@ const Kalkulator_aritmatika_deret_baris = () => {
                 onClick={handleHitungSuku}
                 className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition duration-200 shadow-md"
               >
-                Hitung Suku Ke-n
+                Hitung baris
               </button>
               <button
                 onClick={handleHitungJumlah}
                 className="px-6 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition duration-200 shadow-md"
               >
-                Hitung Jumlah n Suku
+                Hitung deret
               </button>
             </div>
 
